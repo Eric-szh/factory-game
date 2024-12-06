@@ -1,7 +1,7 @@
 // Belt.cs
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
+using Unity.VisualScripting;
 
 public class Belt : BuildingBase, IAcceptable
 {
@@ -14,6 +14,7 @@ public class Belt : BuildingBase, IAcceptable
     public Vector3 direction;
     private IAcceptable nextBelt;
     public List<GameObject> itemsOnBelt = new List<GameObject>();
+    public Queue<GameObject> itemsQueue = new Queue<GameObject>();
     private GameObject endItem;
     public bool frontFilled = false;
 
@@ -34,6 +35,7 @@ public class Belt : BuildingBase, IAcceptable
         foreach (var item in itemsOnBelt)
         {
             Destroy(item);
+           
         }
         if (endItem != null)
         {
@@ -48,6 +50,8 @@ public class Belt : BuildingBase, IAcceptable
 
     void Update()
     {
+        PutItemOn();
+        ClearNullItems();
         MoveItems();
         CheckItemLeave();
     }
@@ -71,20 +75,39 @@ public class Belt : BuildingBase, IAcceptable
 
     public bool CanAcceptItem(ItemType itemType, Vector3 direction)
     {
+        // quick check if the belt is full and the queue have item
         return !frontFilled;
     }
 
     public void AcceptItem(GameObject item)
     {
-        item.transform.position = startPoint.position;
-        item.transform.rotation = transform.rotation;
-        if (xdirection) { 
-            item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionY;
-        } else
+       itemsQueue.Enqueue(item);
+    }
+
+    private void PutItemOn()
+    {
+        // loop through the queue and put the item on the belt
+        
+        if (!frontFilled && itemsQueue.Count != 0)
         {
-            item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionX;
+            GameObject item = itemsQueue.Dequeue();
+            item.transform.position = startPoint.position;
+            item.transform.rotation = transform.rotation;
+            if (xdirection)
+            {
+                item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionY;
+            }
+            else
+            {
+                item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionX;
+            }
+            itemsOnBelt.Add(item);
         }
-        itemsOnBelt.Add(item);
+    }
+
+    private void ClearNullItems()
+    {
+        itemsOnBelt.RemoveAll(item => item == null);
     }
 
     void MoveItems()
@@ -101,8 +124,11 @@ public class Belt : BuildingBase, IAcceptable
     public void itemReachEnd(GameObject item) {
         
         itemsOnBelt.Remove(item);
-        // lock the item in place
-        item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+        // if the next belt is not found, lock the item in place
+        if (nextBelt == null)
+        {
+            item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+        }
         endItem = item;
 
     }

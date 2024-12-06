@@ -16,7 +16,7 @@ public class PlatingFactory : BuildingBase, IAcceptable
     private Belt outputBelt;
     private bool itemProcessing = false;
 
-    public override BuildingType buildingType { get => BuildingType.Produce; }
+    public override BuildingType buildingType { get => BuildingType.Convert; }
 
     public override void OnPlaced()
     {
@@ -37,7 +37,11 @@ public class PlatingFactory : BuildingBase, IAcceptable
 
     void Update()
     {
-        productionTimer += Time.deltaTime;
+        if (itemProcessing)
+        {
+            productionTimer += Time.deltaTime;
+        }
+
 
         if (productionTimer >= productionInterval)
         {

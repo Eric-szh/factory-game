@@ -80,7 +80,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.64, y: 0.64}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -98,7 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 075b9720414804144b8265b4e97461ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  productionInterval: 3
+  productionInterval: 1
   itemPrefab: {fileID: 7978086144897906541, guid: 2dd0e88f0b18b4947ba65015f46ef7e8, type: 3}
   outputPoint: {fileID: 8264058108705985418}
   inputDir: {x: 0, y: 0, z: 0}
