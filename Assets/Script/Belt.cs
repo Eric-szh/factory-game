@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 
-public class Belt : BuildingBase
+public class Belt : BuildingBase, IAcceptable
 {
     [Header("Belt Settings")]
     public float speed = 2f;
@@ -11,7 +11,7 @@ public class Belt : BuildingBase
     public Transform endPoint;
 
     private bool xdirection;
-    private Belt nextBelt;
+    private IAcceptable nextBelt;
     private List<GameObject> itemsOnBelt = new List<GameObject>();
     private GameObject endItem;
     public bool frontFilled = false;
@@ -57,9 +57,9 @@ public class Belt : BuildingBase
 
         BuildingBase building = BuildingRegistry.Instance.GetBuildingAtPosition(outputCell);
 
-        if (building is Belt belt && belt != this)
+        if (building != null && building is IAcceptable)
         {
-            nextBelt = belt;
+            nextBelt = building as IAcceptable;
         }
         else
         {
@@ -67,7 +67,7 @@ public class Belt : BuildingBase
         }
     }
 
-    public override bool CanAcceptItem()
+    public bool CanAcceptItem(ItemType itemType)
     {
         return !frontFilled;
     }
@@ -109,7 +109,7 @@ public class Belt : BuildingBase
     private void CheckItemLeave() { 
         if (endItem == null)
             return;
-        if (nextBelt != null && nextBelt.CanAcceptItem()) {
+        if (nextBelt != null && nextBelt.CanAcceptItem(endItem.GetComponent<Item>().itemType)) {
             endItem.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
             nextBelt.AcceptItem(endItem);
             endItem = null;

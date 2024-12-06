@@ -1,4 +1,5 @@
 // Drill.cs
+using NUnit.Framework.Constraints;
 using UnityEngine;
 
 public class Drill : BuildingBase
@@ -26,11 +27,6 @@ public class Drill : BuildingBase
     public override void UpdateSelf()
     {
         FindOutputBelt();
-    }
-
-    public override bool CanAcceptItem()
-    {
-        return false;
     }
 
     void Update()
@@ -62,7 +58,7 @@ public class Drill : BuildingBase
 
     void ProduceItem()
     {
-        if (outputBelt != null && outputBelt.CanAcceptItem())
+        if (outputBelt != null && outputBelt.CanAcceptItem(itemPrefab.GetComponent<Item>().itemType))
         {
             GameObject item = Instantiate(itemPrefab, outputPoint.position, Quaternion.identity);
             outputBelt.AcceptItem(item);

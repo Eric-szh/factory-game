@@ -11,8 +11,6 @@ public abstract class BuildingBase : MonoBehaviour, IPluggable
 
     // other building when placed will trigger this method to update itself
     public abstract void UpdateSelf();
-
-    public abstract bool CanAcceptItem();
 }
 
 public enum BuildingType
