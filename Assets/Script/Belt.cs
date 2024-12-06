@@ -11,8 +11,9 @@ public class Belt : BuildingBase, IAcceptable
     public Transform endPoint;
 
     private bool xdirection;
+    public Vector3 direction;
     private IAcceptable nextBelt;
-    private List<GameObject> itemsOnBelt = new List<GameObject>();
+    public List<GameObject> itemsOnBelt = new List<GameObject>();
     private GameObject endItem;
     public bool frontFilled = false;
 
@@ -23,6 +24,7 @@ public class Belt : BuildingBase, IAcceptable
         UpdateSelf();
         // determine if the belt is horizontal or vertical
         xdirection = Mathf.Abs(transform.right.x) > 0.5f;
+        direction = transform.right;
     }
 
     public override void OnRemoved()
@@ -53,7 +55,7 @@ public class Belt : BuildingBase, IAcceptable
     public void FindNextBelt()
     {
 
-        Vector3Int outputCell = GridPosition + DirectionToVector3Int(transform.right);
+        Vector3Int outputCell = GridPosition + Utils.DirectionToVector3Int(transform.right);
 
         BuildingBase building = BuildingRegistry.Instance.GetBuildingAtPosition(outputCell);
 
@@ -67,7 +69,7 @@ public class Belt : BuildingBase, IAcceptable
         }
     }
 
-    public bool CanAcceptItem(ItemType itemType)
+    public bool CanAcceptItem(ItemType itemType, Vector3 direction)
     {
         return !frontFilled;
     }
@@ -90,8 +92,6 @@ public class Belt : BuildingBase, IAcceptable
         if (itemsOnBelt.Count == 0)
             return;
 
-        Vector2 direction = (endPoint.position - startPoint.position).normalized;
-
         foreach (var item in itemsOnBelt)
         {
             item.GetComponent<Rigidbody2D>().velocity = direction * speed;
@@ -99,17 +99,18 @@ public class Belt : BuildingBase, IAcceptable
     }
 
     public void itemReachEnd(GameObject item) {
-        endItem = item;
+        
         itemsOnBelt.Remove(item);
         // lock the item in place
         item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+        endItem = item;
 
     }
 
     private void CheckItemLeave() { 
         if (endItem == null)
             return;
-        if (nextBelt != null && nextBelt.CanAcceptItem(endItem.GetComponent<Item>().itemType)) {
+        if (nextBelt != null && nextBelt.CanAcceptItem(endItem.GetComponent<Item>().itemType, direction)) {
             endItem.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
             nextBelt.AcceptItem(endItem);
             endItem = null;
@@ -117,12 +118,5 @@ public class Belt : BuildingBase, IAcceptable
     }
        
 
-    Vector3Int DirectionToVector3Int(Vector3 direction)
-    {
-        return new Vector3Int(
-            Mathf.Abs(direction.x) > 0.5f ? (int)Mathf.Sign(direction.x) : 0,
-            Mathf.Abs(direction.y) > 0.5f ? (int)Mathf.Sign(direction.y) : 0,
-            Mathf.Abs(direction.z) > 0.5f ? (int)Mathf.Sign(direction.z) : 0
-        );
-    }
+    
 }

@@ -9,6 +9,7 @@ public class Drill : BuildingBase
     public GameObject itemPrefab;
     public Transform outputPoint;
 
+    public Vector3 outputDir;
     private float productionTimer = 0f;
     private Belt outputBelt;
 
@@ -16,6 +17,7 @@ public class Drill : BuildingBase
 
     public override void OnPlaced()
     {
+        outputDir = transform.up;
         UpdateSelf();
     }
 
@@ -42,12 +44,20 @@ public class Drill : BuildingBase
 
     void FindOutputBelt()
     {
-        Vector3Int outputCell = GridPosition + DirectionToVector3Int(transform.up);
+        Vector3Int outputCell = GridPosition + Utils.DirectionToVector3Int(outputDir);
 
         BuildingBase building = BuildingRegistry.Instance.GetBuildingAtPosition(outputCell);
 
         if (building is Belt belt)
         {
+            // check the belt's direction
+            Vector3 beltDirection = belt.direction;
+            // if the belt is pointing to the factory, the factory cannot output to it
+            if (beltDirection == -outputDir)
+            {
+                outputBelt = null;
+                return;
+            }
             outputBelt = belt;
         }
         else
@@ -58,18 +68,11 @@ public class Drill : BuildingBase
 
     void ProduceItem()
     {
-        if (outputBelt != null && outputBelt.CanAcceptItem(itemPrefab.GetComponent<Item>().itemType))
+        if (outputBelt != null && outputBelt.CanAcceptItem(itemPrefab.GetComponent<Item>().itemType, transform.up))
         {
             GameObject item = Instantiate(itemPrefab, outputPoint.position, Quaternion.identity);
             outputBelt.AcceptItem(item);
         }
     }
 
-    Vector3Int DirectionToVector3Int(Vector3 direction)
-    {
-        if (direction == transform.up)
-            return Vector3Int.RoundToInt(direction.normalized);
-        else
-            return Vector3Int.zero;
-    }
 }

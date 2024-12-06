@@ -6,5 +6,5 @@ public interface IAcceptable
 {
     void AcceptItem(GameObject item);
 
-    bool CanAcceptItem(ItemType type);
+    bool CanAcceptItem(ItemType type, Vector3 direction);
 }
