@@ -11,6 +11,8 @@ public class Drill : BuildingBase
     private float productionTimer = 0f;
     private Belt outputBelt;
 
+    public override BuildingType buildingType { get => BuildingType.Produce; }
+
     public override void OnPlaced()
     {
         UpdateSelf();
@@ -24,6 +26,11 @@ public class Drill : BuildingBase
     public override void UpdateSelf()
     {
         FindOutputBelt();
+    }
+
+    public override bool CanAcceptItem()
+    {
+        return false;
     }
 
     void Update()

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Building
   - Belt
+  - Item
   layers:
   - Default
   - TransparentFX

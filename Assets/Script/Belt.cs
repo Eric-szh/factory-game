@@ -1,6 +1,7 @@
 // Belt.cs
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 
 public class Belt : BuildingBase
 {
@@ -9,19 +10,33 @@ public class Belt : BuildingBase
     public Transform startPoint;
     public Transform endPoint;
 
+    private bool xdirection;
     private Belt nextBelt;
-    private Queue<GameObject> itemsOnBelt = new Queue<GameObject>();
+    private List<GameObject> itemsOnBelt = new List<GameObject>();
+    private GameObject endItem;
+    public bool frontFilled = false;
+
+    public override BuildingType buildingType { get => BuildingType.Transport; }
 
     public override void OnPlaced()
     {
         UpdateSelf();
-        // No need to notify neighbors here
+        // determine if the belt is horizontal or vertical
+        xdirection = Mathf.Abs(transform.right.x) > 0.5f;
     }
 
     public override void OnRemoved()
     {
         nextBelt = null;
-        // No need to notify neighbors here
+        // destroy all items on the belt
+        foreach (var item in itemsOnBelt)
+        {
+            Destroy(item);
+        }
+        if (endItem != null)
+        {
+            Destroy(endItem);
+        }
     }
 
     public override void UpdateSelf()
@@ -32,13 +47,12 @@ public class Belt : BuildingBase
     void Update()
     {
         MoveItems();
+        CheckItemLeave();
     }
 
     public void FindNextBelt()
     {
-        Debug.Log(GridPosition + " " + transform.right);
-        Debug.Log(DirectionToVector3Int(transform.right));
-        Debug.Log(GridPosition + DirectionToVector3Int(transform.right));
+
         Vector3Int outputCell = GridPosition + DirectionToVector3Int(transform.right);
 
         BuildingBase building = BuildingRegistry.Instance.GetBuildingAtPosition(outputCell);
@@ -53,16 +67,22 @@ public class Belt : BuildingBase
         }
     }
 
-    public bool CanAcceptItem()
+    public override bool CanAcceptItem()
     {
-        return true;
+        return !frontFilled;
     }
 
     public void AcceptItem(GameObject item)
     {
         item.transform.position = startPoint.position;
         item.transform.rotation = transform.rotation;
-        itemsOnBelt.Enqueue(item);
+        if (xdirection) { 
+            item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionY;
+        } else
+        {
+            item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionX;
+        }
+        itemsOnBelt.Add(item);
     }
 
     void MoveItems()
@@ -70,27 +90,32 @@ public class Belt : BuildingBase
         if (itemsOnBelt.Count == 0)
             return;
 
+        Vector2 direction = (endPoint.position - startPoint.position).normalized;
+
         foreach (var item in itemsOnBelt)
         {
-            Vector3 direction = (endPoint.position - startPoint.position).normalized;
-            item.transform.position += direction * speed * Time.deltaTime;
-        }
-
-        GameObject firstItem = itemsOnBelt.Peek();
-        if (Vector3.Distance(firstItem.transform.position, endPoint.position) < 0.1f)
-        {
-            itemsOnBelt.Dequeue();
-
-            if (nextBelt != null)
-            {
-                nextBelt.AcceptItem(firstItem);
-            }
-            else
-            {
-                Destroy(firstItem);
-            }
+            item.GetComponent<Rigidbody2D>().velocity = direction * speed;
         }
     }
+
+    public void itemReachEnd(GameObject item) {
+        endItem = item;
+        itemsOnBelt.Remove(item);
+        // lock the item in place
+        item.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+
+    }
+
+    private void CheckItemLeave() { 
+        if (endItem == null)
+            return;
+        if (nextBelt != null && nextBelt.CanAcceptItem()) {
+            endItem.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
+            nextBelt.AcceptItem(endItem);
+            endItem = null;
+        }
+    }
+       
 
     Vector3Int DirectionToVector3Int(Vector3 direction)
     {
