@@ -10,6 +10,9 @@ public class Goal : BuildingBase, IAcceptable
     {
         // check the type of the item, for copper, add 1 resource, for copper plate, add 5 resources
         ItemType type = item.GetComponent<Item>().itemType;
+        TaskManager.Instance.AddItem(type);
+
+        /*
         if (type == ItemType.Copper)
         {
             ResourceManager.Instance.AddResources(1);
@@ -18,6 +21,7 @@ public class Goal : BuildingBase, IAcceptable
         {
             ResourceManager.Instance.AddResources(5);
         }
+        */
 
         // first , destroy the item
         Destroy(item);
